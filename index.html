@@ -13,7 +13,7 @@
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center text-blue-600">Разкрояване с допустимо излизане (15 см)</h1>
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center text-blue-600">Разкрояване с допустимо излизане (<span id="titleTol">15</span> см)</h1>
         
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div class="lg:col-span-1 space-y-6">
@@ -62,6 +62,14 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="pt-2 border-t">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Толеранс (излизане): <span id="valTol" class="text-orange-500 font-bold">15</span> см</label>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="inputTol" min="0" max="50" value="15" aria-label="Допустимо излизане в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer" style="accent-color: #f59e0b;">
+                            <input type="number" id="inputTolNum" min="0" max="50" value="15" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Контролен панел за Правоъгълника -->
@@ -107,7 +115,7 @@
                 </div>
                 <div class="mt-2 text-[10px] text-gray-400 italic text-center">
                     * Първият ред започва с 15 см отстояние от долната основа.<br>
-                    * Детайлите могат да излизат до 15 см извън границите на трапеца.
+                    * Детайлите могат да излизат до <span id="footerTol">15</span> см извън границите на трапеца.
                 </div>
             </div>
         </div>
@@ -143,6 +151,10 @@
             d: document.getElementById('inputD'),
             rw: document.getElementById('inputRW'),
             rh: document.getElementById('inputRH'),
+            tol: document.getElementById('inputTol'),
+            tolNum: document.getElementById('inputTolNum'),
+            valTol: document.getElementById('valTol'),
+            titleTol: document.getElementById('titleTol'),
             aNum: document.getElementById('inputANum'),
             bNum: document.getElementById('inputBNum'),
             hNum: document.getElementById('inputHNum'),
@@ -281,9 +293,14 @@
             const d = parseInt(el.d.value);
             const rw = parseInt(el.rw.value);
             const rh = parseInt(el.rh.value);
+            const tolCm = parseInt(el.tol.value) || 0;
 
             el.valA.innerText = a; el.valB.innerText = b; el.valH.innerText = h;
             el.valC.innerText = c; el.valD.innerText = d;
+            el.valTol.innerText = tolCm;
+            el.titleTol.innerText = tolCm;
+            el.tolNum.value = tolCm;
+            document.getElementById('footerTol').innerText = tolCm;
 
             // Sync number inputs with slider values
             el.aNum.value = a; el.bNum.value = b; el.hNum.value = h;
@@ -323,7 +340,7 @@
             ctx.stroke();
 
             // Изчертаване на лимита за излизане (външен трапец)
-            const sTol = CONFIG.TOLERANCE_CM * scale;
+            const sTol = tolCm * scale;
             ctx.beginPath();
             ctx.setLineDash([10, 5]);
             ctx.lineWidth = 1;
@@ -367,7 +384,7 @@
 
             const packed = [];
             let cursor = startY - sVM;
-            const minY = startY - h * scale - sTol;
+            const minY = startY - h * scale;
 
             if (!allowRotation || rw === rh) {
                 // No rotation: pack row by row
@@ -458,6 +475,8 @@
         el.h.addEventListener('input', () => syncGeometry('h'));
         el.c.addEventListener('input', () => syncGeometry('c'));
         el.d.addEventListener('input', () => syncGeometry('d'));
+        el.tol.addEventListener('input', scheduleRedraw);
+        syncNumToRange(el.tolNum, el.tol, null);
         syncNumToRange(el.aNum, el.a, 'a');
         syncNumToRange(el.bNum, el.b, 'b');
         syncNumToRange(el.hNum, el.h, 'h');
@@ -512,7 +531,7 @@
                     efficiency: el.fill.innerText,
                     trapezoidArea: parseFloat(el.area.innerText)
                 },
-                config: { toleranceCm: CONFIG.TOLERANCE_CM, verticalMarginCm: CONFIG.VERTICAL_MARGIN_CM }
+                config: { toleranceCm: parseInt(el.tol.value) || 0, verticalMarginCm: CONFIG.VERTICAL_MARGIN_CM }
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const link = document.createElement('a');
