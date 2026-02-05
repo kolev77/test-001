@@ -337,42 +337,53 @@
             ctx.setLineDash([]);
 
             const sVM = CONFIG.VERTICAL_MARGIN_CM * scale;
-
-            // Pack rectangles with given pixel dimensions, return array of {x, y, w, h, fit}
-            function packRects(pw, ph) {
-                const results = [];
-                for (let y = startY - sVM - ph; y >= startY - h * scale - sTol; y -= ph) {
-                    const cx = trapCenterX - pw / 2;
-                    const centerFit = checkRectFit(cx, y, pw, ph, poly, sTol);
-                    if (centerFit !== "none") {
-                        results.push({x: cx, y, w: pw, h: ph, fit: centerFit});
-                        let offset = 1;
-                        while (true) {
-                            let addedAny = false;
-                            const rightX = cx + (offset * pw);
-                            const rFit = checkRectFit(rightX, y, pw, ph, poly, sTol);
-                            const leftX = cx - (offset * pw);
-                            const lFit = checkRectFit(leftX, y, pw, ph, poly, sTol);
-                            if (rFit !== "none") { results.push({x: rightX, y, w: pw, h: ph, fit: rFit}); addedAny = true; }
-                            if (lFit !== "none") { results.push({x: leftX, y, w: pw, h: ph, fit: lFit}); addedAny = true; }
-                            if (!addedAny) break;
-                            offset++;
-                            if (offset > CONFIG.MAX_SPIRAL_ITERATIONS) break;
-                        }
-                    }
-                }
-                return results;
-            }
-
+            const allowRotation = document.getElementById('inputRotate').checked;
             const sRW = rw * scale;
             const sRH = rh * scale;
-            let packed = packRects(sRW, sRH);
 
-            // If rotation enabled and dimensions differ, try rotated and keep whichever fits more
-            const allowRotation = document.getElementById('inputRotate').checked;
-            if (allowRotation && rw !== rh) {
-                const packedRot = packRects(sRH, sRW);
-                if (packedRot.length > packed.length) packed = packedRot;
+            // Pack a full row at y-position with given piece width/height
+            function packRow(y, pw, ph) {
+                const row = [];
+                const cx = trapCenterX - pw / 2;
+                const centerFit = checkRectFit(cx, y, pw, ph, poly, sTol);
+                if (centerFit !== "none") {
+                    row.push({x: cx, y, w: pw, h: ph, fit: centerFit});
+                    let offset = 1;
+                    while (true) {
+                        let addedAny = false;
+                        const rightX = cx + offset * pw;
+                        const rFit = checkRectFit(rightX, y, pw, ph, poly, sTol);
+                        const leftX = cx - offset * pw;
+                        const lFit = checkRectFit(leftX, y, pw, ph, poly, sTol);
+                        if (rFit !== "none") { row.push({x: rightX, y, w: pw, h: ph, fit: rFit}); addedAny = true; }
+                        if (lFit !== "none") { row.push({x: leftX, y, w: pw, h: ph, fit: lFit}); addedAny = true; }
+                        if (!addedAny) break;
+                        offset++;
+                        if (offset > CONFIG.MAX_SPIRAL_ITERATIONS) break;
+                    }
+                }
+                return row;
+            }
+
+            const packed = [];
+            let y = startY - sVM;
+
+            while (y - Math.min(sRH, sRW) >= startY - h * scale - sTol) {
+                // Try normal orientation row
+                const rowN = packRow(y - sRH, sRW, sRH);
+
+                if (allowRotation && sRW !== sRH) {
+                    // Try rotated orientation row
+                    const rowR = packRow(y - sRW, sRH, sRW);
+                    if (rowR.length > rowN.length) {
+                        packed.push(...rowR);
+                        y -= sRW;
+                        continue;
+                    }
+                }
+
+                packed.push(...rowN);
+                y -= sRH;
             }
 
             packed.forEach(r => {
