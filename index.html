@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Трапец - Прецизно центриране (см)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f3f4f6; }
+        canvas { background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        input[type="range"] { accent-color: #2563eb; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center text-blue-600">Разкрояване с допустимо излизане (15 см)</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Контролен панел за Трапеца -->
+                <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
+                    <h2 class="font-semibold text-gray-700 border-b pb-2 text-sm uppercase tracking-wider">Параметри на Трапеца</h2>
+                    
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Основа a (Долна): <span id="valA" class="text-blue-600 font-bold">500</span> см</label>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="inputA" min="200" max="1200" value="500" aria-label="Дължина на долната основа в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <input type="number" id="inputANum" min="200" max="1200" value="500" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Основа b (Горна): <span id="valB" class="text-blue-600 font-bold">400</span> см</label>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="inputB" min="50" max="1100" value="400" aria-label="Дължина на горната основа в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <input type="number" id="inputBNum" min="50" max="1100" value="400" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Височина h: <span id="valH" class="text-blue-600 font-bold">200</span> см</label>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="inputH" min="50" max="800" value="200" aria-label="Височина на трапеца в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <input type="number" id="inputHNum" min="50" max="800" value="200" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 pt-2 border-t">
+                        <p class="text-[10px] text-gray-400 uppercase italic text-center text-blue-600">Автоматични бедра</p>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Бедро c (Ляво): <span id="valC" class="text-blue-600 font-bold">206</span> см</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" id="inputC" min="50" max="1200" value="206" aria-label="Ляво бедро в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <input type="number" id="inputCNum" min="50" max="1200" value="206" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Бедро d (Дясно): <span id="valD" class="text-blue-600 font-bold">206</span> см</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" id="inputD" min="50" max="1200" value="206" aria-label="Дясно бедро в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                <input type="number" id="inputDNum" min="50" max="1200" value="206" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Контролен панел за Правоъгълника -->
+                <div class="bg-blue-600 p-6 rounded-xl shadow-md text-white space-y-4">
+                    <h2 class="font-semibold border-b border-blue-400 pb-2 text-sm uppercase tracking-wider">Детайл</h2>
+                    <div class="flex gap-2">
+                        <button id="optionA" class="flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-white bg-white text-blue-600 transition-colors">A: Хоризонтален<br><span class="text-[10px] font-normal">150 × 75 см</span></button>
+                        <button id="optionB" class="flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-blue-400 bg-blue-500 text-white opacity-70 transition-colors">B: Вертикален<br><span class="text-[10px] font-normal">75 × 150 см</span></button>
+                    </div>
+                    <input type="hidden" id="inputRW" value="150">
+                    <input type="hidden" id="inputRH" value="75">
+                    <div class="flex items-center gap-2 pt-2 border-t border-blue-400">
+                        <input type="checkbox" id="inputRotate" class="w-4 h-4 accent-white">
+                        <label for="inputRotate" class="text-xs opacity-80 cursor-pointer">Авто завъртане 90° (ако побира повече)</label>
+                    </div>
+                    <div class="pt-2 text-center">
+                        <div class="text-4xl font-bold" id="resCount">0</div>
+                        <div class="text-[10px] opacity-70 uppercase mt-1 italic">Брой детайли</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3 flex flex-col items-center">
+                <canvas id="trapCanvas" width="800" height="600" class="w-full h-auto"></canvas>
+                <div class="mt-2 flex gap-2 justify-end w-full">
+                    <button id="exportPNG" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded shadow hover:bg-blue-700 transition-colors">Експорт PNG</button>
+                    <button id="exportJSON" class="px-3 py-1.5 bg-gray-600 text-white text-xs font-medium rounded shadow hover:bg-gray-700 transition-colors">Експорт JSON</button>
+                </div>
+                
+                <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 w-full text-[10px] text-center text-gray-500 uppercase tracking-wider">
+                    <div class="p-3 bg-white rounded shadow-sm border-b-2 border-green-500">
+                        <strong>Ляво откл.</strong> <br><span id="resOffX" class="text-sm text-gray-800 font-bold">0</span> см
+                    </div>
+                    <div class="p-3 bg-white rounded shadow-sm border-b-2 border-purple-500">
+                        <strong>Дясно откл.</strong> <br><span id="resOffY" class="text-sm text-gray-800 font-bold">0</span> см
+                    </div>
+                    <div class="p-3 bg-white rounded shadow-sm border-b-2 border-blue-500">
+                        <strong>Площ трапец</strong> <br><span id="resArea" class="text-sm text-gray-800 font-bold">0</span> см²
+                    </div>
+                    <div class="p-3 bg-white rounded shadow-sm border-b-2 border-orange-500">
+                        <strong>Ефективност</strong> <br><span id="resFillPercent" class="text-sm text-gray-800 font-bold">0%</span>
+                    </div>
+                </div>
+                <div class="mt-2 text-[10px] text-gray-400 italic text-center">
+                    * Първият ред започва с 15 см отстояние от долната основа.<br>
+                    * Детайлите могат да излизат до 15 см извън границите на трапеца.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            TOLERANCE_CM: 15,
+            VERTICAL_MARGIN_CM: 15,
+            MIN_BASE_DIFFERENCE: 5,
+            MAX_SPIRAL_ITERATIONS: 100,
+            CANVAS_WIDTH: 800,
+            CANVAS_HEIGHT: 600,
+            SCALE_PADDING: 1.3
+        };
+
+        const COLORS = {
+            TRAPEZOID_FILL: '#f8fafc',
+            TRAPEZOID_STROKE: '#2563eb',
+            RECT_FULL: { fill: 'rgba(16, 185, 129, 0.4)', stroke: '#10b981' },
+            RECT_TOLERANCE: { fill: 'rgba(245, 158, 11, 0.4)', stroke: '#f59e0b' },
+            TOLERANCE_LINE: 'rgba(148, 163, 184, 0.5)'
+        };
+
+        const canvas = document.getElementById('trapCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const el = {
+            a: document.getElementById('inputA'),
+            b: document.getElementById('inputB'),
+            h: document.getElementById('inputH'),
+            c: document.getElementById('inputC'),
+            d: document.getElementById('inputD'),
+            rw: document.getElementById('inputRW'),
+            rh: document.getElementById('inputRH'),
+            aNum: document.getElementById('inputANum'),
+            bNum: document.getElementById('inputBNum'),
+            hNum: document.getElementById('inputHNum'),
+            cNum: document.getElementById('inputCNum'),
+            dNum: document.getElementById('inputDNum'),
+            valA: document.getElementById('valA'),
+            valB: document.getElementById('valB'),
+            valH: document.getElementById('valH'),
+            valC: document.getElementById('valC'),
+            valD: document.getElementById('valD'),
+            offX: document.getElementById('resOffX'),
+            offY: document.getElementById('resOffY'),
+            area: document.getElementById('resArea'),
+            count: document.getElementById('resCount'),
+            fill: document.getElementById('resFillPercent')
+        };
+
+        function validateInput(value, min, max, defaultVal) {
+            const num = parseInt(value);
+            if (isNaN(num)) return defaultVal;
+            return Math.max(min, Math.min(max, num));
+        }
+
+        function syncGeometry(source) {
+            let a = validateInput(el.a.value, 200, 1200, 500);
+            let b = validateInput(el.b.value, 50, 1100, 400);
+            let h = validateInput(el.h.value, 50, 800, 200);
+            let c = validateInput(el.c.value, 50, 1200, 206);
+            let d = validateInput(el.d.value, 50, 1200, 206);
+
+            if (b > a - CONFIG.MIN_BASE_DIFFERENCE) { b = a - CONFIG.MIN_BASE_DIFFERENCE; el.b.value = b; }
+            const diff = a - b;
+
+            if (['a', 'b', 'h', 'init'].includes(source)) {
+                const hDiff = diff / 2;
+                const s = Math.sqrt(hDiff * hDiff + h * h);
+                el.c.value = Math.round(s);
+                el.d.value = Math.round(s);
+            } else if (source === 'c') {
+                const ox = Math.sqrt(Math.max(0, c * c - h * h));
+                if (ox > diff) el.c.value = Math.round(Math.sqrt(diff * diff + h * h));
+                const oy = diff - Math.min(ox, diff);
+                el.d.value = Math.round(Math.sqrt(oy * oy + h * h));
+            } else if (source === 'd') {
+                const oy = Math.sqrt(Math.max(0, d * d - h * h));
+                if (oy > diff) el.d.value = Math.round(Math.sqrt(diff * diff + h * h));
+                const ox = diff - Math.min(oy, diff);
+                el.c.value = Math.round(Math.sqrt(ox * ox + h * h));
+            }
+            scheduleRedraw();
+        }
+
+        /**
+         * Проверява дали точка е вътре в полигон.
+         */
+        function isPointInPoly(pt, poly) {
+            let inside = false;
+            for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+                const xi = poly[i].x, yi = poly[i].y;
+                const xj = poly[j].x, yj = poly[j].y;
+                const intersect = ((yi > pt.y) !== (yj > pt.y))
+                    && (pt.x < (xj - xi) * (pt.y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        /**
+         * Проверява напасването на правоъгълника. 
+         * Позволява до 'maxOutPx' пиксела излизане.
+         */
+        function checkRectFit(rx, ry, rw, rh, poly, maxOutPx) {
+            // Точки за проверка (ъглите)
+            const corners = [
+                {x: rx, y: ry},
+                {x: rx + rw, y: ry},
+                {x: rx, y: ry + rh},
+                {x: rx + rw, y: ry + rh}
+            ];
+
+            // Проверка за всеки ъгъл - колко далеч е от най-близката граница, ако е отвън
+            for (let p of corners) {
+                if (!isPointInPoly(p, poly)) {
+                    let minDist = Infinity;
+                    // Изчисляваме разстоянието до всяка страна на трапеца
+                    for (let i = 0; i < poly.length; i++) {
+                        const p1 = poly[i];
+                        const p2 = poly[(i + 1) % poly.length];
+                        const d = distToSegment(p, p1, p2);
+                        if (d < minDist) minDist = d;
+                    }
+                    // Ако точката е отвън и разстоянието до трапеца е над лимита - отхвърляме
+                    if (minDist > maxOutPx) return "none";
+                }
+            }
+            
+            // Проверка на средните точки на страните (за по-голяма точност при дълги детайли)
+            const midPoints = [
+                {x: rx + rw/2, y: ry},
+                {x: rx + rw/2, y: ry + rh},
+                {x: rx, y: ry + rh/2},
+                {x: rx + rw, y: ry + rh/2}
+            ];
+            for (let p of midPoints) {
+                if (!isPointInPoly(p, poly)) {
+                    let minDist = Infinity;
+                    for (let i = 0; i < poly.length; i++) {
+                        const d = distToSegment(p, poly[i], poly[(i + 1) % poly.length]);
+                        if (d < minDist) minDist = d;
+                    }
+                    if (minDist > maxOutPx) return "none";
+                }
+            }
+
+            // Проверяваме дали реално излиза или е напълно вътре
+            const allInside = [...corners, ...midPoints].every(p => isPointInPoly(p, poly));
+            return allInside ? "full" : "tol";
+        }
+
+        // Помощна функция за разстояние от точка до отсечка
+        function distToSegment(p, v, w) {
+            const l2 = Math.pow(v.x - w.x, 2) + Math.pow(v.y - w.y, 2);
+            if (l2 === 0) return Math.sqrt(Math.pow(p.x - v.x, 2) + Math.pow(p.y - v.y, 2));
+            let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+            t = Math.max(0, Math.min(1, t));
+            const proj = { x: v.x + t * (w.x - v.x), y: v.y + t * (w.y - v.y) };
+            return Math.sqrt(Math.pow(p.x - proj.x, 2) + Math.pow(p.y - proj.y, 2));
+        }
+
+        function draw() {
+          try {
+            const a = parseInt(el.a.value);
+            const b = parseInt(el.b.value);
+            const h = parseInt(el.h.value);
+            const c = parseInt(el.c.value);
+            const d = parseInt(el.d.value);
+            const rw = parseInt(el.rw.value);
+            const rh = parseInt(el.rh.value);
+
+            el.valA.innerText = a; el.valB.innerText = b; el.valH.innerText = h;
+            el.valC.innerText = c; el.valD.innerText = d;
+
+            // Sync number inputs with slider values
+            el.aNum.value = a; el.bNum.value = b; el.hNum.value = h;
+            el.cNum.value = c; el.dNum.value = d;
+
+            const offX = Math.sqrt(Math.max(0, c * c - h * h));
+            const offY = Math.sqrt(Math.max(0, d * d - h * h));
+            el.offX.innerText = offX.toFixed(1);
+            el.offY.innerText = offY.toFixed(1);
+            
+            const areaTrap = ((a + b) / 2) * h;
+            el.area.innerText = areaTrap.toFixed(0);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const scale = Math.min(canvas.width / (a * CONFIG.SCALE_PADDING), canvas.height / (h * 1.5));
+            const startX = (canvas.width - a * scale) / 2;
+            const startY = (canvas.height - h * scale) / 2 + h * scale;
+            const trapCenterX = startX + (a * scale) / 2;
+
+            const poly = [
+                { x: startX, y: startY },
+                { x: startX + a * scale, y: startY },
+                { x: startX + (a - offY) * scale, y: startY - h * scale },
+                { x: startX + offX * scale, y: startY - h * scale }
+            ];
+
+            // Начертаване на трапеца
+            ctx.beginPath();
+            ctx.moveTo(poly[0].x, poly[0].y);
+            poly.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.closePath();
+            ctx.fillStyle = COLORS.TRAPEZOID_FILL;
+            ctx.fill();
+            ctx.strokeStyle = COLORS.TRAPEZOID_STROKE;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Изчертаване на лимита за излизане (външен трапец)
+            const sTol = CONFIG.TOLERANCE_CM * scale;
+            ctx.beginPath();
+            ctx.setLineDash([10, 5]);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = COLORS.TOLERANCE_LINE;
+            // За простота рисуваме правоъгълна рамка или леко по-голям трапец
+            // Тук просто ще покажем пунктирана линия за толеранса отдолу
+            const toleranceY = startY - CONFIG.VERTICAL_MARGIN_CM * scale;
+            ctx.moveTo(0, toleranceY);
+            ctx.lineTo(canvas.width, toleranceY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            const sVM = CONFIG.VERTICAL_MARGIN_CM * scale;
+
+            // Pack rectangles with given pixel dimensions, return array of {x, y, w, h, fit}
+            function packRects(pw, ph) {
+                const results = [];
+                for (let y = startY - sVM - ph; y >= startY - h * scale - sTol; y -= ph) {
+                    const cx = trapCenterX - pw / 2;
+                    const centerFit = checkRectFit(cx, y, pw, ph, poly, sTol);
+                    if (centerFit !== "none") {
+                        results.push({x: cx, y, w: pw, h: ph, fit: centerFit});
+                        let offset = 1;
+                        while (true) {
+                            let addedAny = false;
+                            const rightX = cx + (offset * pw);
+                            const rFit = checkRectFit(rightX, y, pw, ph, poly, sTol);
+                            const leftX = cx - (offset * pw);
+                            const lFit = checkRectFit(leftX, y, pw, ph, poly, sTol);
+                            if (rFit !== "none") { results.push({x: rightX, y, w: pw, h: ph, fit: rFit}); addedAny = true; }
+                            if (lFit !== "none") { results.push({x: leftX, y, w: pw, h: ph, fit: lFit}); addedAny = true; }
+                            if (!addedAny) break;
+                            offset++;
+                            if (offset > CONFIG.MAX_SPIRAL_ITERATIONS) break;
+                        }
+                    }
+                }
+                return results;
+            }
+
+            const sRW = rw * scale;
+            const sRH = rh * scale;
+            let packed = packRects(sRW, sRH);
+
+            // If rotation enabled and dimensions differ, try rotated and keep whichever fits more
+            const allowRotation = document.getElementById('inputRotate').checked;
+            if (allowRotation && rw !== rh) {
+                const packedRot = packRects(sRH, sRW);
+                if (packedRot.length > packed.length) packed = packedRot;
+            }
+
+            packed.forEach(r => {
+                ctx.beginPath();
+                ctx.rect(r.x, r.y, r.w, r.h);
+                const color = r.fit === "tol" ? COLORS.RECT_TOLERANCE : COLORS.RECT_FULL;
+                ctx.fillStyle = color.fill;
+                ctx.strokeStyle = color.stroke;
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            el.count.innerText = packed.length;
+            el.fill.innerText = (((packed.length * rw * rh) / areaTrap) * 100).toFixed(1) + "%";
+          } catch (err) {
+            console.error('Draw error:', err);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ef4444';
+            ctx.font = '14px sans-serif';
+            ctx.fillText('Грешка при изчертаване. Проверете стойностите.', 20, 30);
+          }
+        }
+
+        let _rafId = null;
+        function scheduleRedraw() {
+            if (_rafId) return;
+            _rafId = requestAnimationFrame(() => {
+                _rafId = null;
+                draw();
+            });
+        }
+
+        // Sync number input -> range slider, then trigger geometry/redraw
+        function syncNumToRange(numEl, rangeEl, source) {
+            numEl.addEventListener('input', () => {
+                rangeEl.value = numEl.value;
+                if (source) syncGeometry(source);
+                else scheduleRedraw();
+            });
+        }
+
+        el.a.addEventListener('input', () => syncGeometry('a'));
+        el.b.addEventListener('input', () => syncGeometry('b'));
+        el.h.addEventListener('input', () => syncGeometry('h'));
+        el.c.addEventListener('input', () => syncGeometry('c'));
+        el.d.addEventListener('input', () => syncGeometry('d'));
+        syncNumToRange(el.aNum, el.a, 'a');
+        syncNumToRange(el.bNum, el.b, 'b');
+        syncNumToRange(el.hNum, el.h, 'h');
+        syncNumToRange(el.cNum, el.c, 'c');
+        syncNumToRange(el.dNum, el.d, 'd');
+
+        // Option A/B toggle for detail orientation
+        const btnA = document.getElementById('optionA');
+        const btnB = document.getElementById('optionB');
+
+        function setOption(option) {
+            if (option === 'A') {
+                el.rw.value = 150; el.rh.value = 75;
+                btnA.className = 'flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-white bg-white text-blue-600 transition-colors';
+                btnB.className = 'flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-blue-400 bg-blue-500 text-white opacity-70 transition-colors';
+            } else {
+                el.rw.value = 75; el.rh.value = 150;
+                btnB.className = 'flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-white bg-white text-blue-600 transition-colors';
+                btnA.className = 'flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-blue-400 bg-blue-500 text-white opacity-70 transition-colors';
+            }
+            scheduleRedraw();
+        }
+
+        btnA.addEventListener('click', () => setOption('A'));
+        btnB.addEventListener('click', () => setOption('B'));
+        document.getElementById('inputRotate').addEventListener('change', scheduleRedraw);
+
+        // Export PNG
+        document.getElementById('exportPNG').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'trapezoid-layout.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+
+        // Export JSON measurements
+        document.getElementById('exportJSON').addEventListener('click', () => {
+            const data = {
+                trapezoid: {
+                    bottomBase: parseInt(el.a.value),
+                    topBase: parseInt(el.b.value),
+                    height: parseInt(el.h.value),
+                    leftLeg: parseInt(el.c.value),
+                    rightLeg: parseInt(el.d.value)
+                },
+                detail: {
+                    width: parseInt(el.rw.value),
+                    height: parseInt(el.rh.value)
+                },
+                results: {
+                    count: parseInt(el.count.innerText),
+                    efficiency: el.fill.innerText,
+                    trapezoidArea: parseFloat(el.area.innerText)
+                },
+                config: { toleranceCm: CONFIG.TOLERANCE_CM, verticalMarginCm: CONFIG.VERTICAL_MARGIN_CM }
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.download = 'trapezoid-measurements.json';
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            URL.revokeObjectURL(link.href);
+        });
+
+        window.onload = () => {
+            syncGeometry('init');
+            draw(); // Ensure immediate render on load
+        };
+    </script>
+</body>
+</html>
