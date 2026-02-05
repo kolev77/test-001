@@ -366,24 +366,52 @@
             }
 
             const packed = [];
-            let y = startY - sVM;
+            let cursor = startY - sVM;
+            const minY = startY - h * scale - sTol;
 
-            while (y - Math.min(sRH, sRW) >= startY - h * scale - sTol) {
-                // Try normal orientation row
-                const rowN = packRow(y - sRH, sRW, sRH);
-
-                if (allowRotation && sRW !== sRH) {
-                    // Try rotated orientation row
-                    const rowR = packRow(y - sRW, sRH, sRW);
-                    if (rowR.length > rowN.length) {
-                        packed.push(...rowR);
-                        y -= sRW;
-                        continue;
-                    }
+            if (!allowRotation || rw === rh) {
+                // No rotation: pack row by row
+                while (cursor - sRH >= minY) {
+                    const row = packRow(cursor - sRH, sRW, sRH);
+                    if (row.length === 0) break;
+                    packed.push(...row);
+                    cursor -= sRH;
                 }
+            } else {
+                // Rotation enabled: compare equivalent vertical chunks
+                // LCM of the two row heights so we compare equal vertical space
+                function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+                const chunkCm = (rh * rw) / gcd(rh, rw);
+                const chunkPx = chunkCm * scale;
+                const nRowsNormal = chunkCm / rh;  // e.g. 150/75 = 2 rows
+                const nRowsRotated = chunkCm / rw;  // e.g. 150/150 = 1 row
 
-                packed.push(...rowN);
-                y -= sRH;
+                while (cursor - Math.min(sRH, sRW) >= minY) {
+                    // Try N normal rows in this chunk
+                    let normalRects = [];
+                    for (let i = 0; i < nRowsNormal; i++) {
+                        const rowY = cursor - sRH * (i + 1);
+                        if (rowY < minY) break;
+                        normalRects.push(...packRow(rowY, sRW, sRH));
+                    }
+
+                    // Try N rotated rows in the same vertical space
+                    let rotatedRects = [];
+                    for (let i = 0; i < nRowsRotated; i++) {
+                        const rowY = cursor - sRW * (i + 1);
+                        if (rowY < minY) break;
+                        rotatedRects.push(...packRow(rowY, sRH, sRW));
+                    }
+
+                    if (normalRects.length === 0 && rotatedRects.length === 0) break;
+
+                    if (rotatedRects.length > normalRects.length) {
+                        packed.push(...rotatedRects);
+                    } else {
+                        packed.push(...normalRects);
+                    }
+                    cursor -= chunkPx;
+                }
             }
 
             packed.forEach(r => {
