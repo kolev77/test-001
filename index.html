@@ -3,129 +3,473 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трапец - Прецизно центриране (см)</title>
+    <title>Solar System Configurator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        solar: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            800: '#92400e',
+                            900: '#78350f'
+                        },
+                        slate: {
+                            850: '#1a1f2e',
+                            950: '#0c0f1a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { background-color: #f3f4f6; }
-        canvas { background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        input[type="range"] { accent-color: #2563eb; }
+        :root {
+            --solar-glow: #f59e0b;
+            --solar-deep: #d97706;
+            --panel-bg: #141821;
+            --panel-surface: #1c2030;
+            --panel-border: #2a2f40;
+            --text-primary: #e8e4dd;
+            --text-muted: #8a8690;
+            --canvas-bg: #0f1218;
+            --accent-green: #34d399;
+            --accent-green-muted: rgba(52, 211, 153, 0.15);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--canvas-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Subtle grid pattern overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(245, 158, 11, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(245, 158, 11, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app-container { position: relative; z-index: 1; }
+
+        /* Header glow line */
+        .header-glow {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--solar-glow), transparent);
+            opacity: 0.6;
+        }
+
+        .brand-title {
+            font-family: 'Instrument Serif', serif;
+            letter-spacing: -0.02em;
+        }
+
+        /* Panel styling */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-header {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding-bottom: 0.625rem;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        /* Solar panel config card */
+        .panel-solar {
+            background: linear-gradient(135deg, #064e3b 0%, #052e16 100%);
+            border: 1px solid rgba(52, 211, 153, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .panel-solar::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            right: -20%;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(52, 211, 153, 0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Range input styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: var(--panel-border);
+            border-radius: 2px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--solar-glow);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+            transition: box-shadow 0.2s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: var(--solar-glow);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+        }
+
+        .range-tol::-webkit-slider-thumb {
+            background: #fb923c;
+            box-shadow: 0 0 8px rgba(251, 146, 60, 0.4);
+        }
+        .range-tol::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 14px rgba(251, 146, 60, 0.6);
+        }
+
+        /* Number inputs */
+        input[type="number"] {
+            background: var(--panel-surface);
+            border: 1px solid var(--panel-border);
+            color: var(--text-primary);
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            transition: border-color 0.2s;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--solar-glow);
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            opacity: 0.5;
+        }
+
+        /* Canvas */
+        canvas {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+        }
+
+        /* Stat cards */
+        .stat-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+        }
+        .stat-card.green::after { background: var(--accent-green); }
+        .stat-card.purple::after { background: #a78bfa; }
+        .stat-card.amber::after { background: var(--solar-glow); }
+        .stat-card.orange::after { background: #fb923c; }
+
+        /* Toggle buttons */
+        .opt-btn {
+            transition: all 0.25s ease;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+        }
+        .opt-btn.active {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(217, 119, 6, 0.15));
+            border-color: var(--solar-glow);
+            color: #fcd34d;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.1);
+        }
+        .opt-btn.inactive {
+            background: transparent;
+            border-color: var(--panel-border);
+            color: var(--text-muted);
+        }
+        .opt-btn:hover:not(.active) {
+            border-color: rgba(245, 158, 11, 0.4);
+            color: var(--text-primary);
+        }
+
+        /* Solar panel toggle buttons */
+        .opt-btn-solar {
+            transition: all 0.25s ease;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+        }
+        .opt-btn-solar.active {
+            background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.15));
+            border-color: #34d399;
+            color: #6ee7b7;
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.1);
+        }
+        .opt-btn-solar.inactive {
+            background: transparent;
+            border-color: rgba(52, 211, 153, 0.15);
+            color: rgba(167, 243, 208, 0.4);
+        }
+        .opt-btn-solar:hover:not(.active) {
+            border-color: rgba(52, 211, 153, 0.4);
+            color: #a7f3d0;
+        }
+
+        /* Export buttons */
+        .btn-export {
+            background: var(--panel-surface);
+            border: 1px solid var(--panel-border);
+            color: var(--text-muted);
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .btn-export:hover {
+            border-color: var(--solar-glow);
+            color: var(--solar-glow);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.1);
+        }
+
+        /* Checkbox styling */
+        input[type="checkbox"] {
+            accent-color: var(--solar-glow);
+        }
+
+        /* Fade-in animation */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeUp 0.5s ease both;
+        }
+        .fade-in-d1 { animation-delay: 0.05s; }
+        .fade-in-d2 { animation-delay: 0.1s; }
+        .fade-in-d3 { animation-delay: 0.15s; }
+        .fade-in-d4 { animation-delay: 0.2s; }
+
+        /* Sun icon pulse */
+        @keyframes sunPulse {
+            0%, 100% { opacity: 0.7; filter: drop-shadow(0 0 6px rgba(251,191,36,0.3)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 12px rgba(251,191,36,0.5)); }
+        }
+        .sun-icon { animation: sunPulse 3s ease-in-out infinite; }
+
+        /* Label styling */
+        .param-label {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+        .param-value {
+            color: var(--solar-glow);
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .param-value-tol {
+            color: #fb923c;
+            font-weight: 700;
+        }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <div class="max-w-7xl mx-auto">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center text-blue-600">Разкрояване с допустимо излизане (<span id="titleTol">15</span> см)</h1>
-        
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div class="lg:col-span-1 space-y-6">
-                <!-- Контролен панел за Трапеца -->
-                <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
-                    <h2 class="font-semibold text-gray-700 border-b pb-2 text-sm uppercase tracking-wider">Параметри на Трапеца</h2>
-                    
+<body class="p-4 md:p-6 lg:p-8">
+    <div class="app-container max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <header class="mb-8 fade-in">
+            <div class="flex items-center justify-center gap-4 mb-3">
+                <svg class="sun-icon w-10 h-10 md:w-12 md:h-12 text-solar-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                </svg>
+                <h1 class="brand-title text-4xl md:text-5xl lg:text-6xl text-solar-100">Solar System Configurator</h1>
+            </div>
+            <p class="text-center text-xs tracking-widest uppercase" style="color: var(--text-muted);">
+                Разкрояване с допустимо излизане — <span id="titleTol" class="text-solar-400">15</span> см толеранс
+            </p>
+            <div class="header-glow mt-4"></div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-5">
+
+            <!-- Left sidebar -->
+            <div class="lg:col-span-1 space-y-4">
+
+                <!-- Trapezoid params -->
+                <div class="panel p-5 space-y-4 fade-in fade-in-d1">
+                    <h2 class="panel-header">Параметри на Трапеца</h2>
+
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Основа a (Долна): <span id="valA" class="text-blue-600 font-bold">500</span> см</label>
+                        <label class="param-label block">Основа a (Долна): <span id="valA" class="param-value">500</span> см</label>
                         <div class="flex items-center gap-2">
-                            <input type="range" id="inputA" min="200" max="1200" value="500" aria-label="Дължина на долната основа в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            <input type="number" id="inputANum" min="200" max="1200" value="500" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                            <input type="range" id="inputA" min="200" max="1200" value="500" aria-label="Дължина на долната основа в сантиметри" class="flex-1">
+                            <input type="number" id="inputANum" min="200" max="1200" value="500" class="w-16 text-xs px-1.5 py-1 text-center">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Основа b (Горна): <span id="valB" class="text-blue-600 font-bold">400</span> см</label>
+                        <label class="param-label block">Основа b (Горна): <span id="valB" class="param-value">400</span> см</label>
                         <div class="flex items-center gap-2">
-                            <input type="range" id="inputB" min="50" max="1100" value="400" aria-label="Дължина на горната основа в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            <input type="number" id="inputBNum" min="50" max="1100" value="400" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                            <input type="range" id="inputB" min="50" max="1100" value="400" aria-label="Дължина на горната основа в сантиметри" class="flex-1">
+                            <input type="number" id="inputBNum" min="50" max="1100" value="400" class="w-16 text-xs px-1.5 py-1 text-center">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Височина h: <span id="valH" class="text-blue-600 font-bold">200</span> см</label>
+                        <label class="param-label block">Височина h: <span id="valH" class="param-value">200</span> см</label>
                         <div class="flex items-center gap-2">
-                            <input type="range" id="inputH" min="50" max="800" value="200" aria-label="Височина на трапеца в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            <input type="number" id="inputHNum" min="50" max="800" value="200" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                            <input type="range" id="inputH" min="50" max="800" value="200" aria-label="Височина на трапеца в сантиметри" class="flex-1">
+                            <input type="number" id="inputHNum" min="50" max="800" value="200" class="w-16 text-xs px-1.5 py-1 text-center">
                         </div>
                     </div>
-                    
-                    <div class="space-y-3 pt-2 border-t">
-                        <p class="text-[10px] text-gray-400 uppercase italic text-center text-blue-600">Автоматични бедра</p>
+
+                    <div class="space-y-3 pt-3" style="border-top: 1px solid var(--panel-border);">
+                        <p class="text-center" style="font-size:0.6rem; color: var(--text-muted); letter-spacing:0.1em; text-transform:uppercase;">Автоматични бедра</p>
                         <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Бедро c (Ляво): <span id="valC" class="text-blue-600 font-bold">206</span> см</label>
+                            <label class="param-label block">Бедро c (Ляво): <span id="valC" class="param-value">206</span> см</label>
                             <div class="flex items-center gap-2">
-                                <input type="range" id="inputC" min="50" max="1200" value="206" aria-label="Ляво бедро в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                                <input type="number" id="inputCNum" min="50" max="1200" value="206" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                                <input type="range" id="inputC" min="50" max="1200" value="206" aria-label="Ляво бедро в сантиметри" class="flex-1">
+                                <input type="number" id="inputCNum" min="50" max="1200" value="206" class="w-16 text-xs px-1.5 py-1 text-center">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Бедро d (Дясно): <span id="valD" class="text-blue-600 font-bold">206</span> см</label>
+                            <label class="param-label block">Бедро d (Дясно): <span id="valD" class="param-value">206</span> см</label>
                             <div class="flex items-center gap-2">
-                                <input type="range" id="inputD" min="50" max="1200" value="206" aria-label="Дясно бедро в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                                <input type="number" id="inputDNum" min="50" max="1200" value="206" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                                <input type="range" id="inputD" min="50" max="1200" value="206" aria-label="Дясно бедро в сантиметри" class="flex-1">
+                                <input type="number" id="inputDNum" min="50" max="1200" value="206" class="w-16 text-xs px-1.5 py-1 text-center">
                             </div>
                         </div>
                     </div>
 
-                    <div class="pt-2 border-t">
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Толеранс (излизане): <span id="valTol" class="text-orange-500 font-bold">15</span> см</label>
-                        <div class="flex items-center gap-2">
-                            <input type="range" id="inputTol" min="0" max="50" value="15" aria-label="Допустимо излизане в сантиметри" class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer" style="accent-color: #f59e0b;">
-                            <input type="number" id="inputTolNum" min="0" max="50" value="15" class="w-16 text-xs border border-gray-300 rounded px-1 py-0.5 text-center">
+                    <div class="pt-3 space-y-4" style="border-top: 1px solid var(--panel-border);">
+                        <div>
+                            <label class="param-label block">Толеранс (излизане): <span id="valTol" class="param-value-tol">15</span> см</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" id="inputTol" min="0" max="50" value="15" aria-label="Допустимо излизане в сантиметри" class="flex-1 range-tol">
+                                <input type="number" id="inputTolNum" min="0" max="50" value="15" class="w-16 text-xs px-1.5 py-1 text-center">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="param-label block">Отстояние от основа: <span id="valVM" class="param-value-tol">15</span> см</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" id="inputVM" min="0" max="100" value="15" aria-label="Отстояние от долната основа в сантиметри" class="flex-1 range-tol">
+                                <input type="number" id="inputVMNum" min="0" max="100" value="15" class="w-16 text-xs px-1.5 py-1 text-center">
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Контролен панел за Правоъгълника -->
-                <div class="bg-blue-600 p-6 rounded-xl shadow-md text-white space-y-4">
-                    <h2 class="font-semibold border-b border-blue-400 pb-2 text-sm uppercase tracking-wider">Детайл</h2>
-                    <div class="flex gap-2">
-                        <button id="optionA" class="flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-white bg-white text-blue-600 transition-colors">A: Хоризонтален<br><span class="text-[10px] font-normal">150 × 75 см</span></button>
-                        <button id="optionB" class="flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-blue-400 bg-blue-500 text-white opacity-70 transition-colors">B: Вертикален<br><span class="text-[10px] font-normal">75 × 150 см</span></button>
+                <!-- Detail / Panel config -->
+                <div class="panel panel-solar p-5 space-y-4 fade-in fade-in-d2" style="color: #d1fae5;">
+                    <h2 class="panel-header" style="color: rgba(167,243,208,0.5); border-color: rgba(52,211,153,0.2);">Соларен Панел</h2>
+                    <div class="flex gap-2 relative z-10">
+                        <button id="optionA" class="opt-btn-solar active flex-1 py-2.5 px-3 text-xs">A: Хоризонтален<br><span style="font-size:0.625rem; font-weight:400; opacity:0.7;">150 × 75 см</span></button>
+                        <button id="optionB" class="opt-btn-solar inactive flex-1 py-2.5 px-3 text-xs">B: Вертикален<br><span style="font-size:0.625rem; font-weight:400; opacity:0.7;">75 × 150 см</span></button>
                     </div>
                     <input type="hidden" id="inputRW" value="150">
                     <input type="hidden" id="inputRH" value="75">
-                    <div class="flex items-center gap-2 pt-2 border-t border-blue-400">
-                        <input type="checkbox" id="inputRotate" class="w-4 h-4 accent-white">
-                        <label for="inputRotate" class="text-xs opacity-80 cursor-pointer">Авто завъртане 90° (ако побира повече)</label>
+                    <div class="flex items-center gap-2 pt-2 relative z-10" style="border-top: 1px solid rgba(52,211,153,0.15);">
+                        <input type="checkbox" id="inputRotate" class="w-4 h-4" style="accent-color: #34d399;">
+                        <label for="inputRotate" class="text-xs cursor-pointer" style="opacity:0.7;">Авто завъртане 90° (ако побира повече)</label>
                     </div>
-                    <div class="pt-2 text-center">
-                        <div class="text-4xl font-bold" id="resCount">0</div>
-                        <div class="text-[10px] opacity-70 uppercase mt-1 italic">Брой детайли</div>
+                    <div class="pt-3 text-center relative z-10">
+                        <div class="text-5xl font-bold tracking-tight" id="resCount" style="color: #6ee7b7; text-shadow: 0 0 30px rgba(52,211,153,0.3);">0</div>
+                        <div style="font-size:0.6rem; opacity:0.5; text-transform:uppercase; letter-spacing:0.1em; margin-top:0.375rem;">Брой панели</div>
                     </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-3 flex flex-col items-center">
+            <!-- Main canvas area -->
+            <div class="lg:col-span-3 flex flex-col items-center fade-in fade-in-d3">
                 <canvas id="trapCanvas" width="800" height="600" class="w-full h-auto"></canvas>
-                <div class="mt-2 flex gap-2 justify-end w-full">
-                    <button id="exportPNG" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded shadow hover:bg-blue-700 transition-colors">Експорт PNG</button>
-                    <button id="exportJSON" class="px-3 py-1.5 bg-gray-600 text-white text-xs font-medium rounded shadow hover:bg-gray-700 transition-colors">Експорт JSON</button>
+
+                <div class="mt-3 flex gap-2 justify-end w-full">
+                    <button id="exportPNG" class="btn-export px-4 py-2 text-xs">Експорт PNG</button>
+                    <button id="exportJSON" class="btn-export px-4 py-2 text-xs">Експорт JSON</button>
                 </div>
-                
-                <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 w-full text-[10px] text-center text-gray-500 uppercase tracking-wider">
-                    <div class="p-3 bg-white rounded shadow-sm border-b-2 border-green-500">
-                        <strong>Ляво откл.</strong> <br><span id="resOffX" class="text-sm text-gray-800 font-bold">0</span> см
+
+                <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 w-full fade-in fade-in-d4">
+                    <div class="stat-card green p-3 text-center">
+                        <div style="font-size:0.6rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted);">Ляво откл.</div>
+                        <div class="text-sm font-bold mt-1" style="color: var(--accent-green);"><span id="resOffX">0</span> <span style="font-weight:400; opacity:0.5;">см</span></div>
                     </div>
-                    <div class="p-3 bg-white rounded shadow-sm border-b-2 border-purple-500">
-                        <strong>Дясно откл.</strong> <br><span id="resOffY" class="text-sm text-gray-800 font-bold">0</span> см
+                    <div class="stat-card purple p-3 text-center">
+                        <div style="font-size:0.6rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted);">Дясно откл.</div>
+                        <div class="text-sm font-bold mt-1" style="color: #a78bfa;"><span id="resOffY">0</span> <span style="font-weight:400; opacity:0.5;">см</span></div>
                     </div>
-                    <div class="p-3 bg-white rounded shadow-sm border-b-2 border-blue-500">
-                        <strong>Площ трапец</strong> <br><span id="resArea" class="text-sm text-gray-800 font-bold">0</span> см²
+                    <div class="stat-card amber p-3 text-center">
+                        <div style="font-size:0.6rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted);">Площ трапец</div>
+                        <div class="text-sm font-bold mt-1" style="color: var(--solar-glow);"><span id="resArea">0</span> <span style="font-weight:400; opacity:0.5;">м²</span></div>
                     </div>
-                    <div class="p-3 bg-white rounded shadow-sm border-b-2 border-orange-500">
-                        <strong>Ефективност</strong> <br><span id="resFillPercent" class="text-sm text-gray-800 font-bold">0%</span>
+                    <div class="stat-card orange p-3 text-center">
+                        <div style="font-size:0.6rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted);">Ефективност</div>
+                        <div class="text-sm font-bold mt-1" style="color: #fb923c;"><span id="resFillPercent">0%</span></div>
                     </div>
                 </div>
-                <div class="mt-2 text-[10px] text-gray-400 italic text-center">
-                    * Първият ред започва с 15 см отстояние от долната основа.<br>
+
+                <div class="mt-3" style="font-size:0.625rem; color:var(--text-muted); text-align:center; line-height:1.6;">
+                    * Първият ред започва с <span id="footerVM">15</span> см отстояние от долната основа.<br>
                     * Детайлите могат да излизат до <span id="footerTol">15</span> см извън границите на трапеца.
                 </div>
             </div>
+
         </div>
+
+        <!-- Footer -->
+        <footer class="mt-10 pb-4 text-center" style="font-size:0.6rem; color:var(--text-muted); letter-spacing:0.05em;">
+            Solar System Configurator &mdash; Precision Panel Layout Engine
+        </footer>
     </div>
 
     <script>
         const CONFIG = {
             TOLERANCE_CM: 15,
             VERTICAL_MARGIN_CM: 15,
-            MIN_BASE_DIFFERENCE: 5,
+            MIN_BASE_DIFFERENCE: 0,
             MAX_SPIRAL_ITERATIONS: 100,
             CANVAS_WIDTH: 800,
             CANVAS_HEIGHT: 600,
@@ -133,11 +477,11 @@
         };
 
         const COLORS = {
-            TRAPEZOID_FILL: '#f8fafc',
-            TRAPEZOID_STROKE: '#2563eb',
-            RECT_FULL: { fill: 'rgba(16, 185, 129, 0.4)', stroke: '#10b981' },
-            RECT_TOLERANCE: { fill: 'rgba(245, 158, 11, 0.4)', stroke: '#f59e0b' },
-            TOLERANCE_LINE: 'rgba(148, 163, 184, 0.5)'
+            TRAPEZOID_FILL: '#1c2030',
+            TRAPEZOID_STROKE: '#d97706',
+            RECT_FULL: { fill: 'rgba(52, 211, 153, 0.3)', stroke: '#34d399' },
+            RECT_TOLERANCE: { fill: 'rgba(251, 191, 36, 0.25)', stroke: '#fbbf24' },
+            TOLERANCE_LINE: 'rgba(251, 191, 36, 0.2)'
         };
 
         const canvas = document.getElementById('trapCanvas');
@@ -155,6 +499,9 @@
             tolNum: document.getElementById('inputTolNum'),
             valTol: document.getElementById('valTol'),
             titleTol: document.getElementById('titleTol'),
+            vm: document.getElementById('inputVM'),
+            vmNum: document.getElementById('inputVMNum'),
+            valVM: document.getElementById('valVM'),
             aNum: document.getElementById('inputANum'),
             bNum: document.getElementById('inputBNum'),
             hNum: document.getElementById('inputHNum'),
@@ -207,9 +554,6 @@
             scheduleRedraw();
         }
 
-        /**
-         * Проверява дали точка е вътре в полигон.
-         */
         function isPointInPoly(pt, poly) {
             let inside = false;
             for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -222,12 +566,7 @@
             return inside;
         }
 
-        /**
-         * Проверява напасването на правоъгълника. 
-         * Позволява до 'maxOutPx' пиксела излизане.
-         */
         function checkRectFit(rx, ry, rw, rh, poly, maxOutPx) {
-            // Точки за проверка (ъглите)
             const corners = [
                 {x: rx, y: ry},
                 {x: rx + rw, y: ry},
@@ -235,23 +574,19 @@
                 {x: rx + rw, y: ry + rh}
             ];
 
-            // Проверка за всеки ъгъл - колко далеч е от най-близката граница, ако е отвън
             for (let p of corners) {
                 if (!isPointInPoly(p, poly)) {
                     let minDist = Infinity;
-                    // Изчисляваме разстоянието до всяка страна на трапеца
                     for (let i = 0; i < poly.length; i++) {
                         const p1 = poly[i];
                         const p2 = poly[(i + 1) % poly.length];
                         const d = distToSegment(p, p1, p2);
                         if (d < minDist) minDist = d;
                     }
-                    // Ако точката е отвън и разстоянието до трапеца е над лимита - отхвърляме
                     if (minDist > maxOutPx) return "none";
                 }
             }
-            
-            // Проверка на средните точки на страните (за по-голяма точност при дълги детайли)
+
             const midPoints = [
                 {x: rx + rw/2, y: ry},
                 {x: rx + rw/2, y: ry + rh},
@@ -269,12 +604,10 @@
                 }
             }
 
-            // Проверяваме дали реално излиза или е напълно вътре
             const allInside = [...corners, ...midPoints].every(p => isPointInPoly(p, poly));
             return allInside ? "full" : "tol";
         }
 
-        // Помощна функция за разстояние от точка до отсечка
         function distToSegment(p, v, w) {
             const l2 = Math.pow(v.x - w.x, 2) + Math.pow(v.y - w.y, 2);
             if (l2 === 0) return Math.sqrt(Math.pow(p.x - v.x, 2) + Math.pow(p.y - v.y, 2));
@@ -294,15 +627,18 @@
             const rw = parseInt(el.rw.value);
             const rh = parseInt(el.rh.value);
             const tolCm = parseInt(el.tol.value) || 0;
+            const vmCm = parseInt(el.vm.value) || 0;
 
             el.valA.innerText = a; el.valB.innerText = b; el.valH.innerText = h;
             el.valC.innerText = c; el.valD.innerText = d;
             el.valTol.innerText = tolCm;
             el.titleTol.innerText = tolCm;
             el.tolNum.value = tolCm;
+            el.valVM.innerText = vmCm;
+            el.vmNum.value = vmCm;
             document.getElementById('footerTol').innerText = tolCm;
+            document.getElementById('footerVM').innerText = vmCm;
 
-            // Sync number inputs with slider values
             el.aNum.value = a; el.bNum.value = b; el.hNum.value = h;
             el.cNum.value = c; el.dNum.value = d;
 
@@ -310,9 +646,9 @@
             const offY = Math.sqrt(Math.max(0, d * d - h * h));
             el.offX.innerText = offX.toFixed(1);
             el.offY.innerText = offY.toFixed(1);
-            
+
             const areaTrap = ((a + b) / 2) * h;
-            el.area.innerText = areaTrap.toFixed(0);
+            el.area.innerText = (areaTrap / 10000).toFixed(2);
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -328,7 +664,7 @@
                 { x: startX + offX * scale, y: startY - h * scale }
             ];
 
-            // Начертаване на трапеца
+            // Draw trapezoid
             ctx.beginPath();
             ctx.moveTo(poly[0].x, poly[0].y);
             poly.forEach(p => ctx.lineTo(p.x, p.y));
@@ -339,26 +675,23 @@
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Изчертаване на лимита за излизане (външен трапец)
+            // Tolerance margin line
             const sTol = tolCm * scale;
             ctx.beginPath();
             ctx.setLineDash([10, 5]);
             ctx.lineWidth = 1;
             ctx.strokeStyle = COLORS.TOLERANCE_LINE;
-            // За простота рисуваме правоъгълна рамка или леко по-голям трапец
-            // Тук просто ще покажем пунктирана линия за толеранса отдолу
-            const toleranceY = startY - CONFIG.VERTICAL_MARGIN_CM * scale;
+            const toleranceY = startY - vmCm * scale;
             ctx.moveTo(0, toleranceY);
             ctx.lineTo(canvas.width, toleranceY);
             ctx.stroke();
             ctx.setLineDash([]);
 
-            const sVM = CONFIG.VERTICAL_MARGIN_CM * scale;
+            const sVM = vmCm * scale;
             const allowRotation = document.getElementById('inputRotate').checked;
             const sRW = rw * scale;
             const sRH = rh * scale;
 
-            // Pack a full row at y-position with given piece width/height
             function packRow(y, pw, ph) {
                 const row = [];
                 const cx = trapCenterX - pw / 2;
@@ -387,7 +720,6 @@
             const minY = startY - h * scale;
 
             if (!allowRotation || rw === rh) {
-                // No rotation: pack row by row
                 while (cursor - sRH >= minY) {
                     const row = packRow(cursor - sRH, sRW, sRH);
                     if (row.length === 0) break;
@@ -395,16 +727,13 @@
                     cursor -= sRH;
                 }
             } else {
-                // Rotation enabled: compare equivalent vertical chunks
-                // LCM of the two row heights so we compare equal vertical space
                 function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
                 const chunkCm = (rh * rw) / gcd(rh, rw);
                 const chunkPx = chunkCm * scale;
-                const nRowsNormal = chunkCm / rh;  // e.g. 150/75 = 2 rows
-                const nRowsRotated = chunkCm / rw;  // e.g. 150/150 = 1 row
+                const nRowsNormal = chunkCm / rh;
+                const nRowsRotated = chunkCm / rw;
 
                 while (cursor - Math.min(sRH, sRW) >= minY) {
-                    // Try N normal rows in this chunk
                     let normalRects = [];
                     for (let i = 0; i < nRowsNormal; i++) {
                         const rowY = cursor - sRH * (i + 1);
@@ -412,7 +741,6 @@
                         normalRects.push(...packRow(rowY, sRW, sRH));
                     }
 
-                    // Try N rotated rows in the same vertical space
                     let rotatedRects = [];
                     for (let i = 0; i < nRowsRotated; i++) {
                         const rowY = cursor - sRW * (i + 1);
@@ -461,7 +789,6 @@
             });
         }
 
-        // Sync number input -> range slider, then trigger geometry/redraw
         function syncNumToRange(numEl, rangeEl, source) {
             numEl.addEventListener('input', () => {
                 rangeEl.value = numEl.value;
@@ -476,26 +803,28 @@
         el.c.addEventListener('input', () => syncGeometry('c'));
         el.d.addEventListener('input', () => syncGeometry('d'));
         el.tol.addEventListener('input', scheduleRedraw);
+        el.vm.addEventListener('input', scheduleRedraw);
         syncNumToRange(el.tolNum, el.tol, null);
+        syncNumToRange(el.vmNum, el.vm, null);
         syncNumToRange(el.aNum, el.a, 'a');
         syncNumToRange(el.bNum, el.b, 'b');
         syncNumToRange(el.hNum, el.h, 'h');
         syncNumToRange(el.cNum, el.c, 'c');
         syncNumToRange(el.dNum, el.d, 'd');
 
-        // Option A/B toggle for detail orientation
+        // Option A/B toggle
         const btnA = document.getElementById('optionA');
         const btnB = document.getElementById('optionB');
 
         function setOption(option) {
             if (option === 'A') {
                 el.rw.value = 150; el.rh.value = 75;
-                btnA.className = 'flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-white bg-white text-blue-600 transition-colors';
-                btnB.className = 'flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-blue-400 bg-blue-500 text-white opacity-70 transition-colors';
+                btnA.className = 'opt-btn-solar active flex-1 py-2.5 px-3 text-xs';
+                btnB.className = 'opt-btn-solar inactive flex-1 py-2.5 px-3 text-xs';
             } else {
                 el.rw.value = 75; el.rh.value = 150;
-                btnB.className = 'flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-white bg-white text-blue-600 transition-colors';
-                btnA.className = 'flex-1 py-2 px-3 rounded text-xs font-bold border-2 border-blue-400 bg-blue-500 text-white opacity-70 transition-colors';
+                btnB.className = 'opt-btn-solar active flex-1 py-2.5 px-3 text-xs';
+                btnA.className = 'opt-btn-solar inactive flex-1 py-2.5 px-3 text-xs';
             }
             scheduleRedraw();
         }
@@ -507,12 +836,12 @@
         // Export PNG
         document.getElementById('exportPNG').addEventListener('click', () => {
             const link = document.createElement('a');
-            link.download = 'trapezoid-layout.png';
+            link.download = 'solar-layout.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
         });
 
-        // Export JSON measurements
+        // Export JSON
         document.getElementById('exportJSON').addEventListener('click', () => {
             const data = {
                 trapezoid: {
@@ -531,11 +860,11 @@
                     efficiency: el.fill.innerText,
                     trapezoidArea: parseFloat(el.area.innerText)
                 },
-                config: { toleranceCm: parseInt(el.tol.value) || 0, verticalMarginCm: CONFIG.VERTICAL_MARGIN_CM }
+                config: { toleranceCm: parseInt(el.tol.value) || 0, verticalMarginCm: parseInt(el.vm.value) || 0 }
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const link = document.createElement('a');
-            link.download = 'trapezoid-measurements.json';
+            link.download = 'solar-measurements.json';
             link.href = URL.createObjectURL(blob);
             link.click();
             URL.revokeObjectURL(link.href);
@@ -543,7 +872,7 @@
 
         window.onload = () => {
             syncGeometry('init');
-            draw(); // Ensure immediate render on load
+            draw();
         };
     </script>
 </body>
