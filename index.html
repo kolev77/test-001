@@ -232,30 +232,6 @@
             color: var(--text-primary);
         }
 
-        /* Solar panel toggle buttons */
-        .opt-btn-solar {
-            transition: all 0.25s ease;
-            border: 1px solid rgba(52, 211, 153, 0.3);
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            position: relative;
-        }
-        .opt-btn-solar.active {
-            background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.15));
-            border-color: #34d399;
-            color: #6ee7b7;
-            box-shadow: 0 0 20px rgba(52, 211, 153, 0.1);
-        }
-        .opt-btn-solar.inactive {
-            background: transparent;
-            border-color: rgba(52, 211, 153, 0.15);
-            color: rgba(167, 243, 208, 0.4);
-        }
-        .opt-btn-solar:hover:not(.active) {
-            border-color: rgba(52, 211, 153, 0.4);
-            color: #a7f3d0;
-        }
 
         /* Export buttons */
         .btn-export {
@@ -401,12 +377,22 @@
                 <!-- Detail / Panel config -->
                 <div class="panel panel-solar p-5 space-y-4 fade-in fade-in-d2" style="color: #d1fae5;">
                     <h2 class="panel-header" style="color: rgba(167,243,208,0.5); border-color: rgba(52,211,153,0.2);">Соларен Панел</h2>
-                    <div class="flex gap-2 relative z-10">
-                        <button id="optionA" class="opt-btn-solar active flex-1 py-2.5 px-3 text-xs">A: Хоризонтален<br><span style="font-size:0.625rem; font-weight:400; opacity:0.7;">150 × 75 см</span></button>
-                        <button id="optionB" class="opt-btn-solar inactive flex-1 py-2.5 px-3 text-xs">B: Вертикален<br><span style="font-size:0.625rem; font-weight:400; opacity:0.7;">75 × 150 см</span></button>
+                    <div class="space-y-3 relative z-10">
+                        <div>
+                            <label class="param-label block" style="color: rgba(167,243,208,0.7);">Ширина : <span id="valRW" class="param-value" style="color: #6ee7b7;">150</span> см</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" id="inputRW" min="10" max="300" value="150" aria-label="Ширина на панела в сантиметри" class="flex-1">
+                                <input type="number" id="inputRWNum" min="10" max="300" value="150" class="w-16 text-xs px-1.5 py-1 text-center">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="param-label block" style="color: rgba(167,243,208,0.7);">Височина : <span id="valRH" class="param-value" style="color: #6ee7b7;">75</span> см</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" id="inputRH" min="10" max="300" value="75" aria-label="Височина на панела в сантиметри" class="flex-1">
+                                <input type="number" id="inputRHNum" min="10" max="300" value="75" class="w-16 text-xs px-1.5 py-1 text-center">
+                            </div>
+                        </div>
                     </div>
-                    <input type="hidden" id="inputRW" value="150">
-                    <input type="hidden" id="inputRH" value="75">
                     <div class="flex items-center gap-2 pt-2 relative z-10" style="border-top: 1px solid rgba(52,211,153,0.15);">
                         <input type="checkbox" id="inputRotate" class="w-4 h-4" style="accent-color: #34d399;">
                         <label for="inputRotate" class="text-xs cursor-pointer" style="opacity:0.7;">Авто завъртане 90° (ако побира повече)</label>
@@ -490,6 +476,10 @@
             d: document.getElementById('inputD'),
             rw: document.getElementById('inputRW'),
             rh: document.getElementById('inputRH'),
+            rwNum: document.getElementById('inputRWNum'),
+            rhNum: document.getElementById('inputRHNum'),
+            valRW: document.getElementById('valRW'),
+            valRH: document.getElementById('valRH'),
             tol: document.getElementById('inputTol'),
             tolNum: document.getElementById('inputTolNum'),
             valTol: document.getElementById('valTol'),
@@ -805,25 +795,16 @@
         syncNumToRange(el.cNum, el.c, 'c');
         syncNumToRange(el.dNum, el.d, 'd');
 
-        // Option A/B toggle
-        const btnA = document.getElementById('optionA');
-        const btnB = document.getElementById('optionB');
-
-        function setOption(option) {
-            if (option === 'A') {
-                el.rw.value = 150; el.rh.value = 75;
-                btnA.className = 'opt-btn-solar active flex-1 py-2.5 px-3 text-xs';
-                btnB.className = 'opt-btn-solar inactive flex-1 py-2.5 px-3 text-xs';
-            } else {
-                el.rw.value = 75; el.rh.value = 150;
-                btnB.className = 'opt-btn-solar active flex-1 py-2.5 px-3 text-xs';
-                btnA.className = 'opt-btn-solar inactive flex-1 py-2.5 px-3 text-xs';
-            }
-            scheduleRedraw();
+        // Panel dimension sliders
+        function syncPanelDim(slider, numInput, valSpan) {
+            slider.addEventListener('input', () => { numInput.value = slider.value; valSpan.innerText = slider.value; scheduleRedraw(); });
+            numInput.addEventListener('input', () => {
+                let v = Math.max(+numInput.min, Math.min(+numInput.max, +numInput.value || +numInput.min));
+                slider.value = v; valSpan.innerText = v; scheduleRedraw();
+            });
         }
-
-        btnA.addEventListener('click', () => setOption('A'));
-        btnB.addEventListener('click', () => setOption('B'));
+        syncPanelDim(el.rw, el.rwNum, el.valRW);
+        syncPanelDim(el.rh, el.rhNum, el.valRH);
         document.getElementById('inputRotate').addEventListener('change', scheduleRedraw);
 
         // Export PNG
