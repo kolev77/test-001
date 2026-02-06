@@ -328,9 +328,6 @@
                 </svg>
                 <h1 class="brand-title text-4xl md:text-5xl lg:text-6xl text-solar-100">Solar System Configurator</h1>
             </div>
-            <p class="text-center text-xs tracking-widest uppercase" style="color: var(--text-muted);">
-                Разкрояване с допустимо излизане — <span id="titleTol" class="text-solar-400">15</span> см толеранс
-            </p>
             <div class="header-glow mt-4"></div>
         </header>
 
@@ -344,23 +341,21 @@
                     <h2 class="panel-header">Параметри на Трапеца</h2>
 
                     <div>
-                        <label class="param-label block">Основа a (Долна): <span id="valA" class="param-value">500</span> см</label>
-                        <div class="flex items-center gap-2">
-                            <input type="range" id="inputA" min="200" max="1200" value="500" aria-label="Дължина на долната основа в сантиметри" class="flex-1">
-                            <input type="number" id="inputANum" min="200" max="1200" value="500" class="w-16 text-xs px-1.5 py-1 text-center">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="param-label block">Основа b (Горна): <span id="valB" class="param-value">400</span> см</label>
+                        <label class="param-label block">Горна основа : <span id="valB" class="param-value">400</span> см</label>
                         <div class="flex items-center gap-2">
                             <input type="range" id="inputB" min="50" max="1100" value="400" aria-label="Дължина на горната основа в сантиметри" class="flex-1">
                             <input type="number" id="inputBNum" min="50" max="1100" value="400" class="w-16 text-xs px-1.5 py-1 text-center">
                         </div>
                     </div>
-
                     <div>
-                        <label class="param-label block">Височина h: <span id="valH" class="param-value">200</span> см</label>
+                        <label class="param-label block">Долна основа : <span id="valA" class="param-value">500</span> см</label>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="inputA" min="200" max="1200" value="500" aria-label="Дължина на долната основа в сантиметри" class="flex-1">
+                            <input type="number" id="inputANum" min="200" max="1200" value="500" class="w-16 text-xs px-1.5 py-1 text-center">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="param-label block">Височина : <span id="valH" class="param-value">200</span> см</label>
                         <div class="flex items-center gap-2">
                             <input type="range" id="inputH" min="50" max="800" value="200" aria-label="Височина на трапеца в сантиметри" class="flex-1">
                             <input type="number" id="inputHNum" min="50" max="800" value="200" class="w-16 text-xs px-1.5 py-1 text-center">
@@ -370,14 +365,14 @@
                     <div class="space-y-3 pt-3" style="border-top: 1px solid var(--panel-border);">
                         <p class="text-center" style="font-size:0.6rem; color: var(--text-muted); letter-spacing:0.1em; text-transform:uppercase;">Автоматични бедра</p>
                         <div>
-                            <label class="param-label block">Бедро c (Ляво): <span id="valC" class="param-value">206</span> см</label>
+                            <label class="param-label block">Лява страна : <span id="valC" class="param-value">206</span> см</label>
                             <div class="flex items-center gap-2">
                                 <input type="range" id="inputC" min="50" max="1200" value="206" aria-label="Ляво бедро в сантиметри" class="flex-1">
                                 <input type="number" id="inputCNum" min="50" max="1200" value="206" class="w-16 text-xs px-1.5 py-1 text-center">
                             </div>
                         </div>
                         <div>
-                            <label class="param-label block">Бедро d (Дясно): <span id="valD" class="param-value">206</span> см</label>
+                            <label class="param-label block">Дясна страна : <span id="valD" class="param-value">206</span> см</label>
                             <div class="flex items-center gap-2">
                                 <input type="range" id="inputD" min="50" max="1200" value="206" aria-label="Дясно бедро в сантиметри" class="flex-1">
                                 <input type="number" id="inputDNum" min="50" max="1200" value="206" class="w-16 text-xs px-1.5 py-1 text-center">
@@ -498,7 +493,6 @@
             tol: document.getElementById('inputTol'),
             tolNum: document.getElementById('inputTolNum'),
             valTol: document.getElementById('valTol'),
-            titleTol: document.getElementById('titleTol'),
             vm: document.getElementById('inputVM'),
             vmNum: document.getElementById('inputVMNum'),
             valVM: document.getElementById('valVM'),
@@ -632,7 +626,6 @@
             el.valA.innerText = a; el.valB.innerText = b; el.valH.innerText = h;
             el.valC.innerText = c; el.valD.innerText = d;
             el.valTol.innerText = tolCm;
-            el.titleTol.innerText = tolCm;
             el.tolNum.value = tolCm;
             el.valVM.innerText = vmCm;
             el.vmNum.value = vmCm;
