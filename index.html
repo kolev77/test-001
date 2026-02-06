@@ -516,8 +516,7 @@
             let c = validateInput(el.c.value, 50, 1200, 206);
             let d = validateInput(el.d.value, 50, 1200, 206);
 
-            if (b > a - CONFIG.MIN_BASE_DIFFERENCE) { b = a - CONFIG.MIN_BASE_DIFFERENCE; el.b.value = b; }
-            const diff = a - b;
+            const diff = Math.abs(a - b);
 
             if (['a', 'b', 'h', 'init'].includes(source)) {
                 const hDiff = diff / 2;
@@ -635,17 +634,33 @@
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const scale = Math.min(canvas.width / (a * CONFIG.SCALE_PADDING), canvas.height / (h * 1.5));
-            const startX = (canvas.width - a * scale) / 2;
+            const maxBase = Math.max(a, b);
+            const scale = Math.min(canvas.width / (maxBase * CONFIG.SCALE_PADDING), canvas.height / (h * 1.5));
             const startY = (canvas.height - h * scale) / 2 + h * scale;
-            const trapCenterX = startX + (a * scale) / 2;
 
-            const poly = [
-                { x: startX, y: startY },
-                { x: startX + a * scale, y: startY },
-                { x: startX + (a - offY) * scale, y: startY - h * scale },
-                { x: startX + offX * scale, y: startY - h * scale }
-            ];
+            // Center the trapezoid based on the wider base
+            let bottomLeft, bottomRight, topLeft, topRight;
+
+            if (a >= b) {
+                // Normal trapezoid: bottom wider than top
+                const startX = (canvas.width - a * scale) / 2;
+
+                bottomLeft = { x: startX, y: startY };
+                bottomRight = { x: startX + a * scale, y: startY };
+                topRight = { x: startX + a * scale - offY * scale, y: startY - h * scale };
+                topLeft = { x: startX + offX * scale, y: startY - h * scale };
+            } else {
+                // Inverted trapezoid: top wider than bottom
+                const startX = (canvas.width - b * scale) / 2;
+
+                topLeft = { x: startX, y: startY - h * scale };
+                topRight = { x: startX + b * scale, y: startY - h * scale };
+                bottomRight = { x: startX + b * scale - offY * scale, y: startY };
+                bottomLeft = { x: startX + offX * scale, y: startY };
+            }
+
+            const poly = [bottomLeft, bottomRight, topRight, topLeft];
+            const trapCenterX = (bottomLeft.x + bottomRight.x) / 2;
 
             // Draw trapezoid
             ctx.beginPath();
